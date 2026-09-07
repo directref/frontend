@@ -78,9 +78,13 @@ export default function FeedClient({ initialJobs }: { initialJobs: JobWithReferr
     setBrowseStarted(true);
   };
 
-  const { data: myJobs }  = useSWR('feed/my-jobs',  () => jobsApi.mine().then(r => r.data));
-  const { data: myInbox } = useSWR('feed/my-inbox', () => applicationsApi.inbox().then(r => r.data));
-  const { data: myApps }  = useSWR('feed/my-apps',  () => applicationsApi.mine().then(r => r.data));
+  // Same SWR keys as jobs/post and applications pages (jobs/mine, apps/inbox,
+  // apps/mine) — not page-local ones, so posting a job or updating an
+  // application there invalidates this cache too instead of leaving Home
+  // showing stale data until an unrelated revalidation happens to fire.
+  const { data: myJobs }  = useSWR('jobs/mine',  () => jobsApi.mine().then(r => r.data));
+  const { data: myInbox } = useSWR('apps/inbox', () => applicationsApi.inbox().then(r => r.data));
+  const { data: myApps }  = useSWR('apps/mine',  () => applicationsApi.mine().then(r => r.data));
   const { data: savedData } = useSWR(
     'saved-jobs',
     () => savedJobsApi.getAll().then(r => r.data),
