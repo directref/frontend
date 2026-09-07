@@ -49,7 +49,7 @@ export default function SettingsPage() {
 
       <div className="flex flex-col gap-6">
         <ProfileCard />
-        {!user?.linkedinId && <LinkedInCard />}
+        <LinkedInCard />
         {user?.isReferrer && <WorkEmailCard />}
         <BillingCard />
       </div>

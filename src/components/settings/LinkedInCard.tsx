@@ -1,6 +1,8 @@
 'use client';
 
+import { CheckCircle2 } from 'lucide-react';
 import { pfx } from '@/app/(app)/settings/tokens';
+import { useAuth } from '@/lib/context/AuthContext';
 import { SecondaryButton } from './buttons';
 import { API_BASE } from '@/lib/constants';
 
@@ -12,9 +14,14 @@ function LinkedInGlyph({ size = 20 }: { size?: number }) {
   );
 }
 
-/** Only rendered while the user hasn't connected LinkedIn — once they have,
- *  this card's job is done and it disappears (no persistent "Connected" state). */
+/** Shows a "Connect" CTA until the profile is linked, then switches to a
+ *  persistent "Connected" badge — stays visible either way, unlike before
+ *  when the card just disappeared with no ongoing confirmation that the
+ *  connection was actually still in place. */
 export function LinkedInCard() {
+  const { user } = useAuth();
+  const isConnected = !!user?.linkedinId;
+
   const handleConnect = () => {
     window.location.href = `${API_BASE}/api/auth/linkedin/connect`;
   };
@@ -33,19 +40,28 @@ export function LinkedInCard() {
         </div>
         <div className="min-w-0">
           <p className="text-[15px] font-semibold" style={{ color: pfx.ink }}>LinkedIn</p>
-          <p className="mt-2 text-[13px] leading-relaxed" style={{ color: pfx.inkSecondary }}>
-            Connect your profile so we know you better and focus your matches.
-          </p>
+          {isConnected ? (
+            <div className="mt-2 flex items-center gap-2 text-[13.5px] font-medium" style={{ color: pfx.ink }}>
+              <CheckCircle2 className="w-4 h-4 text-good shrink-0" strokeWidth={1.8} />
+              Connected
+            </div>
+          ) : (
+            <p className="mt-2 text-[13px] leading-relaxed" style={{ color: pfx.inkSecondary }}>
+              Connect your profile so we know you better and focus your matches.
+            </p>
+          )}
         </div>
       </div>
 
-      <SecondaryButton
-        onClick={handleConnect}
-        className="mt-4 w-full sm:mt-0 sm:w-auto sm:absolute sm:top-5 sm:right-5 inline-flex items-center gap-2"
-      >
-        <LinkedInGlyph size={16} />
-        Connect
-      </SecondaryButton>
+      {!isConnected && (
+        <SecondaryButton
+          onClick={handleConnect}
+          className="mt-4 w-full sm:mt-0 sm:w-auto sm:absolute sm:top-5 sm:right-5 inline-flex items-center gap-2"
+        >
+          <LinkedInGlyph size={16} />
+          Connect
+        </SecondaryButton>
+      )}
     </div>
   );
 }
