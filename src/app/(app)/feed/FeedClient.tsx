@@ -98,11 +98,15 @@ export default function FeedClient({ initialJobs }: { initialJobs: JobWithReferr
     () => jobsApi.suggested(5).then(r => r.data),
   );
 
-  // Most recently posted jobs, platform-wide — shown to every user regardless of role
-  const { data: recentlyPostedJobs } = useSWR(
+  // Most recently posted jobs, platform-wide — shown to every user regardless
+  // of role, but never your own postings, same as Browse Jobs excludes them
+  // (jobs/page.tsx allJobs) — this is "jobs you could apply to", not a feed
+  // of platform activity.
+  const { data: rawRecentlyPosted } = useSWR(
     'feed/recently-posted',
     () => jobsApi.search({ limit: 5 }).then(r => r.data),
   );
+  const recentlyPostedJobs = (rawRecentlyPosted ?? []).filter(item => item.referrer.id !== user?.id);
 
   // Stats
   const appsSent      = (myApps  ?? []).length;
