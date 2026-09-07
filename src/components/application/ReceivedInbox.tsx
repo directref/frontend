@@ -340,26 +340,15 @@ function DetailPanel({ data, onUpdate }: { data: ApplicationWithDetails; onUpdat
           <p className="text-sm text-text-secondary bg-input rounded-lg px-3.5 py-2.5">
             Did you submit this to your internal system yet?
           </p>
-          <div className="flex gap-3">
-            <Button
-              variant="primary"
-              onClick={handleConfirmSubmitted}
-              isLoading={busy === 'confirm'}
-              disabled={busy !== null}
-              className="flex-1"
-            >
-              I submitted it
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={handleNotAFit}
-              isLoading={busy === 'reject'}
-              disabled={busy !== null}
-              className="flex-1"
-            >
-              Not a fit
-            </Button>
-          </div>
+          <Button
+            variant="primary"
+            onClick={handleConfirmSubmitted}
+            isLoading={busy === 'confirm'}
+            disabled={busy !== null}
+            className="w-full"
+          >
+            Submitted
+          </Button>
         </div>
       ) : isDecided ? (
         <p className="flex items-center gap-1.5 text-sm font-semibold text-text-secondary">
