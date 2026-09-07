@@ -108,19 +108,11 @@ export default function PostJobPage() {
   };
 
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  // Shows the retention tooltip right at the moment a job is switched off —
-  // separate from the hover tooltip on the "Inactive" badge, which explains
-  // the same policy once the switch has settled into its inactive state.
-  const [justDeactivatedId, setJustDeactivatedId] = useState<string | null>(null);
   const handleToggleActive = async (id: string, isActive: boolean) => {
     setTogglingId(id);
     try {
       await jobsApi.update(id, { isActive: !isActive });
       toast.success(isActive ? 'Job deactivated' : 'Job reactivated');
-      if (isActive) {
-        setJustDeactivatedId(id);
-        setTimeout(() => setJustDeactivatedId((cur) => (cur === id ? null : cur)), 4000);
-      }
       mutate();
     } catch {
       toast.error('Failed to update job');
@@ -275,11 +267,7 @@ export default function PostJobPage() {
                         <span className="text-xs text-text-muted">{timeAgo(job.createdAt)}</span>
                       </div>
                     </div>
-                    <Tooltip
-                      content="We're going to save this position for 30 days before it's permanently deleted."
-                      open={justDeactivatedId === job.id}
-                      onOpenChange={(o) => { if (!o) setJustDeactivatedId((cur) => (cur === job.id ? null : cur)); }}
-                    >
+                    <Tooltip content={jobDeletionTooltip(job.deactivatedAt)}>
                       <div onClick={(e) => e.stopPropagation()} className="shrink-0 pt-1">
                         <Switch
                           checked={job.isActive}
