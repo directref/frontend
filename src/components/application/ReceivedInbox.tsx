@@ -22,6 +22,7 @@ const STATUS_LABEL: Record<string, string> = {
   internally_submitted: 'Submitted internally',
   rejected: 'Not a fit',
   expired: 'Expired',
+  withdrawn: 'Withdrawn',
 };
 
 // The 4 KPI/filter chips — fixed set. Submitted + Viewed collapse into one
@@ -212,7 +213,12 @@ function DetailPanel({ data, onUpdate }: { data: ApplicationWithDetails; onUpdat
   // 'forwarded' (downloaded) isn't terminal anymore — the referrer still owes a
   // yes/no on whether they submitted it internally, so it gets its own branch below.
   const isAwaitingSubmission = application.status === 'forwarded';
-  const isDecided = application.status === 'internally_submitted' || application.status === 'rejected' || application.status === 'expired';
+  // 'withdrawn' only ever happens before a referrer views it (see
+  // withdrawApplication), but a withdrawn application can still be opened
+  // later from the "All" filter — without this it fell through to the
+  // default branch and offered Download/Not a fit on an application whose
+  // CV file no longer even exists on disk.
+  const isDecided = application.status === 'internally_submitted' || application.status === 'rejected' || application.status === 'expired' || application.status === 'withdrawn';
   const cvUrl = applicationsApi.cvUrl(application.id);
   const cvPreviewUrl = applicationsApi.cvPreviewUrl(application.id);
 
@@ -362,7 +368,9 @@ function DetailPanel({ data, onUpdate }: { data: ApplicationWithDetails; onUpdat
             ? 'Submitted internally.'
             : application.status === 'expired'
               ? 'Expired — no response in time.'
-              : 'Marked not a fit.'}
+              : application.status === 'withdrawn'
+                ? 'Withdrawn by the seeker before you opened it.'
+                : 'Marked not a fit.'}
         </p>
       ) : (
         <div className="flex gap-3">
