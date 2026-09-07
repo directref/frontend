@@ -13,10 +13,15 @@ import { STATUS_COLORS, STATUS_TOOLTIPS, formatBytes, cn } from '@/lib/utils';
 import { ApiError, ensureFreshSession } from '@/lib/api/client';
 import type { ApplicationWithDetails } from '@/lib/types';
 
-// Status pill wording is fixed by spec — do not rename these, even though the
-// underlying status column still reads 'submitted' | 'viewed' | 'forwarded' | 'rejected'.
+// Status pill wording — the underlying status column reads 'submitted' |
+// 'viewed' | 'forwarded' | 'rejected' etc., these are just the referrer-
+// facing display labels.
 const STATUS_LABEL: Record<string, string> = {
-  submitted: 'Submitted',
+  // "Submitted" read as something the referrer had already done, when it
+  // means the opposite — nothing has happened on their side yet. Matches
+  // the "Awaiting review" wording the filter chip below already uses for
+  // this same bucket, so the two never say different things about one state.
+  submitted: 'Awaiting review',
   viewed: 'Viewed',
   forwarded: 'Downloaded',
   internally_submitted: 'Submitted internally',
@@ -26,9 +31,9 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 // The 4 KPI/filter chips — fixed set. Submitted + Viewed collapse into one
-// "Awaiting review" bucket here (the row's own status pill still shows the
-// individual Submitted/Viewed label) — this is a display-only grouping, not
-// a new status value.
+// "Awaiting review" bucket here (the row's own status pill still tells them
+// apart — "Awaiting review" vs "Viewed") — this is a display-only grouping,
+// not a new status value.
 type Filter = 'all' | 'pending' | 'forwarded' | 'rejected';
 
 const FILTER_CHIPS: { id: Filter; label: string; match: (status: string) => boolean; countColor: string }[] = [
