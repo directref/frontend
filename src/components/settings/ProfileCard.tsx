@@ -8,7 +8,7 @@ import { pfx } from '@/app/(app)/settings/tokens';
 import { useAuth } from '@/lib/context/AuthContext';
 import { usersApi } from '@/lib/api/users';
 import { ApiError, ensureFreshSession } from '@/lib/api/client';
-import { Field, SelectField } from './fields';
+import { Field, SelectField, ComboboxField } from './fields';
 import { PrimaryButton } from './buttons';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
@@ -94,8 +94,6 @@ const TECH_ROLES = [
   { value: 'Financial Analyst/Engineer', label: 'Financial Analyst/Engineer' },
 ];
 
-const OTHER_ROLE = '__other__';
-
 const EMPLOYMENT_TYPES = [
   { value: 'full-time', label: 'Full-time' },
   { value: 'part-time', label: 'Part-time' },
@@ -115,8 +113,6 @@ export function ProfileCard() {
   const [savedForm, setSavedForm] = useState<FormState>(() => fromUser(user));
   const [form, setForm] = useState<FormState>(() => fromUser(user));
   const [isLoading, setIsLoading] = useState(false);
-  const isKnownRole = (role: string) => TECH_ROLES.some((r) => r.value === role);
-  const [customRole, setCustomRole] = useState(() => form.desiredRole !== '' && !isKnownRole(form.desiredRole));
   const [cvUploading, setCvUploading] = useState(false);
   const [removeCvOpen, setRemoveCvOpen] = useState(false);
   const [removingCv, setRemovingCv] = useState(false);
@@ -127,16 +123,6 @@ export function ProfileCard() {
 
   const set = <K extends keyof FormState>(key: K) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
-  };
-
-  const handleRoleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (e.target.value === OTHER_ROLE) {
-      setCustomRole(true);
-      setForm((prev) => ({ ...prev, desiredRole: isKnownRole(prev.desiredRole) ? '' : prev.desiredRole }));
-    } else {
-      setCustomRole(false);
-      setForm((prev) => ({ ...prev, desiredRole: e.target.value }));
-    }
   };
 
   const handleSave = async () => {
@@ -253,24 +239,13 @@ export function ProfileCard() {
           <Link href="/feed" className="font-semibold" style={{ color: pfx.gold }}>Home</Link> page.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="w-full">
-            <SelectField
-              label="Desired role"
-              value={customRole ? OTHER_ROLE : form.desiredRole}
-              onChange={handleRoleSelect}
-              options={[...TECH_ROLES, { value: OTHER_ROLE, label: 'Other…' }]}
-              placeholder="Select…"
-            />
-            {customRole && (
-              <Field
-                label="Custom role"
-                value={form.desiredRole}
-                onChange={set('desiredRole')}
-                placeholder="e.g. Growth Hacker"
-                className="mt-2"
-              />
-            )}
-          </div>
+          <ComboboxField
+            label="Desired role"
+            value={form.desiredRole}
+            onChange={(v) => setForm((prev) => ({ ...prev, desiredRole: v }))}
+            options={TECH_ROLES}
+            placeholder="Type or pick a role…"
+          />
           <SelectField
             label="Preferred location"
             value={form.preferredLocation}
