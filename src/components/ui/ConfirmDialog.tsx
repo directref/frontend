@@ -26,7 +26,9 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title={title} description={description} onClose={() => onOpenChange(false)} className="max-w-[420px]">
+      {/* No X — Cancel below is the only dismiss action, so there's exactly
+          one way to back out instead of two that do the same thing. */}
+      <DialogContent title={title} description={description} className="max-w-[420px]">
         <div className="px-6 pb-6 pt-1 flex justify-end gap-2">
           <button
             type="button"

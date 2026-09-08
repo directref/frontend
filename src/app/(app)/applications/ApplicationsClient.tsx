@@ -203,7 +203,7 @@ function SentTab({ apps, onUpdate }: { apps: ApplicationWithDetails[]; onUpdate:
         open={withdrawTarget !== null}
         onOpenChange={(open) => !open && setWithdrawTarget(null)}
         title="Withdraw this application?"
-        description="The referrer will be notified. You can't undo this — apply again if you change your mind."
+        description="The referrer will be notified and your CV will be removed. You can always apply again later."
         confirmLabel="Withdraw"
         onConfirm={handleWithdraw}
         isLoading={withdrawingId !== null}
