@@ -97,6 +97,26 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+/** Truncates a filename in the middle rather than at the end, so a long
+ *  auto-generated or descriptive name still shows its extension
+ *  ("Shai_Atar_CV_...2026.pdf") instead of CSS text-overflow cutting it
+ *  off ("Shai_Atar_CV_Final_...pdf" losing the "pdf" itself if it's long
+ *  enough). No-op if the name already fits within maxLength. */
+export function truncateMiddle(name: string, maxLength = 28): string {
+  if (name.length <= maxLength) return name;
+  const dotIndex = name.lastIndexOf('.');
+  const hasExt = dotIndex > 0 && dotIndex < name.length - 1;
+  const ext = hasExt ? name.slice(dotIndex) : '';
+  const base = hasExt ? name.slice(0, dotIndex) : name;
+
+  const keep = maxLength - ext.length - 3; // 3 for the "…" separator
+  if (keep <= 1) return `${name.slice(0, maxLength - 1)}…`; // pathological: no room to split sensibly
+
+  const front = Math.ceil(keep / 2);
+  const back = Math.floor(keep / 2);
+  return `${base.slice(0, front)}…${back > 0 ? base.slice(-back) : ''}${ext}`;
+}
+
 /** Format a currency amount */
 export function formatCurrency(amount: string | number | null | undefined, currency = 'USD'): string {
   if (!amount) return '';

@@ -12,7 +12,7 @@ import { Field, SelectField, ComboboxField } from './fields';
 import { PrimaryButton } from './buttons';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
-import { getInitials, formatBytes, cn } from '@/lib/utils';
+import { getInitials, formatBytes, truncateMiddle, cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
 
 type FormState = {
@@ -277,27 +277,32 @@ export function ProfileCard() {
 
         {/* CV of record — kept on the profile so applying can reuse it instead of a fresh upload every time */}
         <div className="mt-4">
-          <p className="block text-[12.5px] font-medium mb-1.5" style={{ color: pfx.inkSecondary }}>Add my CV</p>
+          <p className="block text-[12.5px] font-medium" style={{ color: pfx.inkSecondary }}>CV / Resume</p>
+          <p className="text-[11.5px] mb-1.5" style={{ color: pfx.inkMuted }}>PDF only (max 10MB)</p>
           {user?.cvOriginalName ? (
-            <div className="flex items-center gap-3 rounded-[10px] border p-3" style={{ borderColor: pfx.border, background: pfx.surface }}>
+            <div
+              onClick={handleViewCv}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleViewCv(); } }}
+              className="flex items-center gap-3 rounded-[10px] border p-3 cursor-pointer hover:border-gold-300/50 transition-colors"
+              style={{ borderColor: pfx.border, background: pfx.surface }}
+            >
               <FileText className="w-4 h-4 shrink-0" style={{ color: pfx.gold }} strokeWidth={1.8} />
               <div className="flex-1 min-w-0">
-                <p className="text-[13.5px] font-medium truncate" style={{ color: pfx.ink }}>{user.cvOriginalName}</p>
+                <p className="text-[13.5px] font-medium" style={{ color: pfx.ink }} title={user.cvOriginalName}>
+                  {truncateMiddle(user.cvOriginalName)}
+                </p>
                 {user.cvSizeBytes != null && (
                   <p className="text-[11.5px]" style={{ color: pfx.inkMuted }}>{formatBytes(user.cvSizeBytes)}</p>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={handleViewCv}
-                className="shrink-0 text-[12.5px] font-medium"
-                style={{ color: pfx.gold }}
-              >
+              <span className="shrink-0 text-[12.5px] font-medium" style={{ color: pfx.gold }}>
                 View
-              </button>
+              </span>
               <button
                 type="button"
-                onClick={() => cvInputRef.current?.click()}
+                onClick={(e) => { e.stopPropagation(); cvInputRef.current?.click(); }}
                 disabled={cvUploading}
                 className="shrink-0 text-[12.5px] font-medium disabled:opacity-50"
                 style={{ color: pfx.inkSecondary }}
@@ -306,7 +311,7 @@ export function ProfileCard() {
               </button>
               <button
                 type="button"
-                onClick={() => setRemoveCvOpen(true)}
+                onClick={(e) => { e.stopPropagation(); setRemoveCvOpen(true); }}
                 className="shrink-0 text-[12.5px] font-medium text-crit"
               >
                 Remove
@@ -326,7 +331,6 @@ export function ProfileCard() {
                 {cvUploading ? 'Uploading…' : (
                   <>Drop your CV here, or <span className="font-semibold" style={{ color: pfx.gold }}>browse</span></>
                 )}
-                <span className="block text-[11.5px]" style={{ color: pfx.inkMuted }}>PDF · Max 10MB</span>
               </p>
             </div>
           )}
@@ -344,9 +348,9 @@ export function ProfileCard() {
       <ConfirmDialog
         open={removeCvOpen}
         onOpenChange={setRemoveCvOpen}
-        title="Remove your CV?"
-        description="You can upload a new one anytime. This won't affect CVs already sent for existing applications."
-        confirmLabel="Remove CV"
+        title="Remove CV?"
+        description="Are you sure you want to remove your CV? You can upload a new one anytime."
+        confirmLabel="Remove"
         onConfirm={handleRemoveCv}
         isLoading={removingCv}
       />
