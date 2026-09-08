@@ -215,7 +215,13 @@ export function ProfileCard() {
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Full name" value={form.fullName} onChange={set('fullName')} required />
-          <Field label="Current role" value={form.headline} onChange={set('headline')} placeholder="e.g. Senior Engineer" />
+          <ComboboxField
+            label="Current role"
+            value={form.headline}
+            onChange={(v) => setForm((prev) => ({ ...prev, headline: v }))}
+            options={TECH_ROLES}
+            placeholder="e.g. Senior Engineer"
+          />
           <Field label="Company" value={form.companyName} onChange={set('companyName')} placeholder="Where do you work?" />
           <Field
             label="Years of experience"
