@@ -74,10 +74,9 @@ export function WorkEmailCard() {
           <Briefcase className="w-[18px] h-[18px]" strokeWidth={1.8} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold" style={{ color: pfx.ink }}>Work email</p>
+          <p className="text-[15px] font-semibold" style={{ color: pfx.ink }}>Verify your work email</p>
           <p className="mt-1 text-[13px] leading-relaxed" style={{ color: pfx.inkSecondary }}>
-            Verify your work email to prove which company you work at — required before posting a job
-            for that company.
+            Please verify your work email to confirm your employer before posting a job.
           </p>
 
           {user?.workEmailVerified ? (
