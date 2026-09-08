@@ -1,12 +1,12 @@
 'use client';
 
 import { mutate } from 'swr';
-import { Eye, Send, Inbox, XCircle, Handshake, CheckCircle2, Bell, type LucideIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Eye, Send, Inbox, XCircle, Handshake, CheckCircle2, Bell, ChevronRight, type LucideIcon } from 'lucide-react';
 import { useNotifications } from '@/lib/hooks/useNotifications';
 import { notificationsApi } from '@/lib/api/notifications';
 import { Button } from '@/components/ui/Button';
 import { timeAgo, cn } from '@/lib/utils';
-import Link from 'next/link';
 
 const TYPE_ICON: Record<string, LucideIcon> = {
   cv_viewed:            Eye,
@@ -18,6 +18,7 @@ const TYPE_ICON: Record<string, LucideIcon> = {
 };
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const { notifications, isLoading, mutate: refresh } = useNotifications();
 
   const handleMarkAll = async () => {
@@ -68,57 +69,56 @@ export default function NotificationsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {notifications.map((n) => (
-            <div
-              key={n.id}
-              onClick={() => !n.isRead && handleMarkOne(n.id)}
-              className={cn(
-                'flex items-start gap-3 px-4 py-3.5 rounded-xl border transition-all',
-                n.isRead
-                  ? 'bg-card border-border opacity-60'
-                  : 'bg-card border-gold-300/20 hover:border-gold-300/40 hover:bg-card-hover cursor-pointer',
-              )}
-            >
-              {/* Icon */}
-              <div className={cn(
-                'w-9 h-9 rounded-full flex items-center justify-center shrink-0',
-                n.isRead ? 'bg-input' : 'bg-gold-300/15',
-              )}>
-                {(() => {
-                  const Icon = TYPE_ICON[n.type] ?? Bell;
-                  return <Icon className="w-[18px] h-[18px] text-text-secondary" strokeWidth={1.8} />;
-                })()}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p className={cn(
-                  'text-sm leading-snug',
-                  n.isRead ? 'text-text-secondary' : 'text-text-primary font-semibold',
+          {notifications.map((n) => {
+            const isClickable = !!n.linkUrl || !n.isRead;
+            return (
+              <div
+                key={n.id}
+                onClick={() => {
+                  if (!n.isRead) handleMarkOne(n.id);
+                  if (n.linkUrl) router.push(n.linkUrl);
+                }}
+                className={cn(
+                  'flex items-start gap-3 px-4 py-3.5 rounded-xl border transition-all',
+                  n.isRead ? 'bg-card border-border opacity-60' : 'bg-card border-gold-300/20',
+                  isClickable && 'cursor-pointer hover:border-gold-300/40 hover:bg-card-hover',
+                )}
+              >
+                {/* Icon */}
+                <div className={cn(
+                  'w-9 h-9 rounded-full flex items-center justify-center shrink-0',
+                  n.isRead ? 'bg-input' : 'bg-gold-300/15',
                 )}>
-                  {n.title}
-                </p>
-                <p className="text-xs text-text-muted mt-0.5">{n.body}</p>
-                <p className="text-xs text-text-muted mt-1">{timeAgo(n.createdAt)}</p>
-              </div>
+                  {(() => {
+                    const Icon = TYPE_ICON[n.type] ?? Bell;
+                    return <Icon className="w-[18px] h-[18px] text-text-secondary" strokeWidth={1.8} />;
+                  })()}
+                </div>
 
-              {/* Unread dot + link */}
-              <div className="flex flex-col items-end gap-2 shrink-0">
-                {!n.isRead && (
-                  <div className="w-2 h-2 rounded-full bg-gold-300" />
-                )}
-                {n.linkUrl && (
-                  <Link
-                    href={n.linkUrl}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-[11px] text-gold-300 hover:text-gold-400 font-medium"
-                  >
-                    View →
-                  </Link>
-                )}
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <p className={cn(
+                    'text-sm leading-snug',
+                    n.isRead ? 'text-text-secondary' : 'text-text-primary font-semibold',
+                  )}>
+                    {n.title}
+                  </p>
+                  <p className="text-xs text-text-muted mt-0.5">{n.body}</p>
+                  <p className="text-xs text-text-muted mt-1">{timeAgo(n.createdAt)}</p>
+                </div>
+
+                {/* Unread dot + affordance chevron */}
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  {!n.isRead && (
+                    <div className="w-2 h-2 rounded-full bg-gold-300" />
+                  )}
+                  {n.linkUrl && (
+                    <ChevronRight className="w-4 h-4 text-text-muted" strokeWidth={1.8} />
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
