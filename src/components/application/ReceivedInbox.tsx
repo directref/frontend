@@ -81,6 +81,64 @@ function MessageIcon() {
   );
 }
 
+// One row in the request list — its own component (not just a .map() body)
+// so it can poll its own unread-message count via useSWR; hooks can't be
+// called per-iteration inside a loop. Shares the `messages-${id}` SWR key
+// with DetailPanel/MessageThread, so opening the thread clears this badge too.
+function InboxListRow({
+  a,
+  isSelected,
+  onSelect,
+}: {
+  a: ApplicationWithDetails;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  const preview = listPreview(a.application.coverNote, a.seeker?.headline);
+  const { data: msgData } = useSWR(
+    `messages-${a.application.id}`,
+    () => applicationsApi.getMessages(a.application.id).then((r) => r.data),
+    { refreshInterval: 30_000, revalidateOnFocus: false },
+  );
+  const unreadCount = msgData?.unreadCount ?? 0;
+
+  return (
+    <button
+      onClick={onSelect}
+      className={cn(
+        'text-left bg-card border rounded-xl px-4 py-3.5 transition-colors cursor-pointer',
+        isSelected ? 'border-gold-300 ring-1 ring-gold-300/30' : 'border-border hover:border-border-strong',
+      )}
+    >
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <p className="text-sm font-bold text-text-primary truncate">{a.seeker?.fullName}</p>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {unreadCount > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[15px] h-[15px] px-1 rounded-full bg-gold-300 text-[#0A0A0A] text-[10px] font-bold leading-none">
+              {unreadCount}
+            </span>
+          )}
+          <Tooltip content={STATUS_TOOLTIPS[a.application.status]}>
+            {/* No tabIndex here — this row is already a <button>; a focusable
+                child inside it would be a nested-interactive-element a11y bug. */}
+            <span
+              className={cn(
+                'shrink-0 inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full border cursor-help',
+                STATUS_COLORS[a.application.status],
+              )}
+            >
+              {STATUS_LABEL[a.application.status] ?? a.application.status}
+            </span>
+          </Tooltip>
+        </div>
+      </div>
+      <p className="text-xs text-text-secondary mb-0.5 truncate">{a.job.title}</p>
+      {preview && <p className="text-xs text-text-muted line-clamp-2 mb-1">{preview}</p>}
+      <p className="text-[11px] text-text-muted">{relativeDate(a.application.createdAt)}</p>
+    </button>
+  );
+}
+
 function CheckIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="shrink-0">
@@ -158,39 +216,14 @@ export function ReceivedInbox({
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-5 items-start">
           {/* Left — request list */}
           <div className="flex flex-col gap-2 lg:max-h-[calc(100vh-260px)] lg:overflow-y-auto lg:pr-1">
-            {filtered.map((a) => {
-              const isSelected = selected?.application.id === a.application.id;
-              const preview = listPreview(a.application.coverNote, a.seeker?.headline);
-              return (
-                <button
-                  key={a.application.id}
-                  onClick={() => setSelectedId(a.application.id)}
-                  className={cn(
-                    'text-left bg-card border rounded-xl px-4 py-3.5 transition-colors cursor-pointer',
-                    isSelected ? 'border-gold-300 ring-1 ring-gold-300/30' : 'border-border hover:border-border-strong',
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm font-bold text-text-primary truncate">{a.seeker?.fullName}</p>
-                    <Tooltip content={STATUS_TOOLTIPS[a.application.status]}>
-                      {/* No tabIndex here — this row is already a <button>; a focusable
-                          child inside it would be a nested-interactive-element a11y bug. */}
-                      <span
-                        className={cn(
-                          'shrink-0 inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full border cursor-help',
-                          STATUS_COLORS[a.application.status],
-                        )}
-                      >
-                        {STATUS_LABEL[a.application.status] ?? a.application.status}
-                      </span>
-                    </Tooltip>
-                  </div>
-                  <p className="text-xs text-text-secondary mb-0.5 truncate">{a.job.title}</p>
-                  {preview && <p className="text-xs text-text-muted line-clamp-2 mb-1">{preview}</p>}
-                  <p className="text-[11px] text-text-muted">{relativeDate(a.application.createdAt)}</p>
-                </button>
-              );
-            })}
+            {filtered.map((a) => (
+              <InboxListRow
+                key={a.application.id}
+                a={a}
+                isSelected={selected?.application.id === a.application.id}
+                onSelect={() => setSelectedId(a.application.id)}
+              />
+            ))}
           </div>
 
           {/* Right — sticky detail panel */}
