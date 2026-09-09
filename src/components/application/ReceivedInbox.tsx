@@ -92,12 +92,14 @@ function CheckIcon() {
 export function ReceivedInbox({
   apps,
   onUpdate,
+  initialOpenMessageId,
 }: {
   apps: ApplicationWithDetails[];
   onUpdate: () => void;
+  initialOpenMessageId?: string | null;
 }) {
   const [filter, setFilter] = useState<Filter>('all');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialOpenMessageId ?? null);
 
   // Counts always reflect the full dataset, regardless of the active filter.
   const counts = Object.fromEntries(
@@ -193,7 +195,14 @@ export function ReceivedInbox({
 
           {/* Right — sticky detail panel */}
           <div className="lg:sticky lg:top-6">
-            {selected && <DetailPanel key={selected.application.id} data={selected} onUpdate={onUpdate} />}
+            {selected && (
+              <DetailPanel
+                key={selected.application.id}
+                data={selected}
+                onUpdate={onUpdate}
+                autoOpenMessages={selected.application.id === initialOpenMessageId}
+              />
+            )}
           </div>
         </div>
       )}
@@ -201,10 +210,18 @@ export function ReceivedInbox({
   );
 }
 
-function DetailPanel({ data, onUpdate }: { data: ApplicationWithDetails; onUpdate: () => void }) {
+function DetailPanel({
+  data,
+  onUpdate,
+  autoOpenMessages,
+}: {
+  data: ApplicationWithDetails;
+  onUpdate: () => void;
+  autoOpenMessages?: boolean;
+}) {
   const { application, job, seeker } = data;
   const [busy, setBusy] = useState<'download' | 'reject' | 'confirm' | null>(null);
-  const [msgOpen, setMsgOpen] = useState(false);
+  const [msgOpen, setMsgOpen] = useState(autoOpenMessages ?? false);
   const [cvOpen, setCvOpen] = useState(false);
 
   // Lightweight unread count poll — shares SWR key with MessageThread so opening clears the badge
