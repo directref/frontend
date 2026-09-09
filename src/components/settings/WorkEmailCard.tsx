@@ -115,8 +115,7 @@ export function WorkEmailCard() {
                 </PrimaryButton>
               </div>
               <p className="mt-2.5 text-[11.5px] leading-relaxed" style={{ color: pfx.inkMuted }}>
-                Used only to verify your employer — we&apos;ll never send notifications or anything
-                else to this address.
+                Used for employment verification only. We will never send notifications to this email.
               </p>
             </>
           )}
