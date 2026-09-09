@@ -114,6 +114,10 @@ export function WorkEmailCard() {
                   {isLoading ? 'Sending…' : pendingEmail ? 'Resend link' : 'Send verification'}
                 </PrimaryButton>
               </div>
+              <p className="mt-2.5 text-[11.5px] leading-relaxed" style={{ color: pfx.inkMuted }}>
+                Used only to verify your employer — we&apos;ll never send notifications or anything
+                else to this address.
+              </p>
             </>
           )}
         </div>
