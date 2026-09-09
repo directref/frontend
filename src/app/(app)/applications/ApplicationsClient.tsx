@@ -72,8 +72,16 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 // ─── TAB: Requests you sent ───────────────────────────────────────────────────
-function SentTab({ apps, onUpdate }: { apps: ApplicationWithDetails[]; onUpdate: () => void }) {
-  const [msgOpen, setMsgOpen] = useState<string | null>(null);
+function SentTab({
+  apps,
+  onUpdate,
+  initialOpenMessageId,
+}: {
+  apps: ApplicationWithDetails[];
+  onUpdate: () => void;
+  initialOpenMessageId?: string | null;
+}) {
+  const [msgOpen, setMsgOpen] = useState<string | null>(initialOpenMessageId ?? null);
   const { data: msgData } = useSWR(
     msgOpen ? `messages-${msgOpen}` : null,
     () => applicationsApi.getMessages(msgOpen!).then(r => r.data),
@@ -288,6 +296,9 @@ export default function ApplicationsClient({
     const p = searchParams.get('tab');
     return (p === 'received' || p === 'saved') ? p : 'sent';
   });
+  // Set only when arriving from a message notification's deep link — opens
+  // straight into that application's thread instead of the bare list.
+  const openMessageId = searchParams.get('openMessage');
 
   // Keep tab in sync if the URL param changes (e.g. back/forward navigation)
   useEffect(() => {
@@ -327,8 +338,8 @@ export default function ApplicationsClient({
       </p>
 
       {/* Content — one view per tab; which view shows is decided by the ?tab= route from the sidebar */}
-      {tab === 'sent'     && <SentTab apps={sentApps ?? []} onUpdate={() => mutateSent()} />}
-      {tab === 'received' && <ReceivedInbox apps={receivedApps ?? []} onUpdate={() => mutateReceived()} />}
+      {tab === 'sent'     && <SentTab apps={sentApps ?? []} onUpdate={() => mutateSent()} initialOpenMessageId={openMessageId} />}
+      {tab === 'received' && <ReceivedInbox apps={receivedApps ?? []} onUpdate={() => mutateReceived()} initialOpenMessageId={openMessageId} />}
       {tab === 'saved'    && <SavedTab />}
     </div>
   );
