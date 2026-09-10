@@ -179,7 +179,7 @@ export const STATUS_TOOLTIPS: Record<string, string> = {
   forwarded: 'The referrer downloaded your CV and is deciding whether to submit it internally.',
   internally_submitted: "The referrer submitted your CV into their company's internal system.",
   rejected: 'The referrer marked this application as not a fit for the role.',
-  expired: 'This application expired because the referrer did not respond in time.',
+  expired: "This application expired because the referrer didn't respond within 5 days.",
   withdrawn: 'You withdrew this application before the referrer opened your CV.',
 };
 
