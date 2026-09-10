@@ -71,6 +71,106 @@ function StatusBadge({ status }: { status: string }) {
   return tooltip ? <Tooltip content={tooltip}>{badge}</Tooltip> : badge;
 }
 
+// ─── One "Sent CV" card — its own component (not just a .map() body) so it
+// can poll its own unread-message count via useSWR; hooks can't be called
+// per-iteration inside a loop. ───────────────────────────────────────────────
+function SentAppRow({
+  a,
+  replacingId,
+  msgOpenId,
+  onReplaceClick,
+  onWithdrawClick,
+  onMessageOpen,
+  onMessageClose,
+}: {
+  a: ApplicationWithDetails;
+  replacingId: string | null;
+  msgOpenId: string | null;
+  onReplaceClick: (id: string) => void;
+  onWithdrawClick: (id: string) => void;
+  onMessageOpen: (id: string) => void;
+  onMessageClose: () => void;
+}) {
+  const { data: msgData } = useSWR(
+    `messages-${a.application.id}`,
+    () => applicationsApi.getMessages(a.application.id).then(r => r.data),
+    { refreshInterval: 30_000, revalidateOnFocus: false },
+  );
+  const unreadCount = msgData?.unreadCount ?? 0;
+
+  return (
+    <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Header: icon + company/title + status badge */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+          <BuildingIcon />
+          <div>
+            <span style={{ fontSize: 15, fontWeight: 700 }}>{a.job.companyName}</span>
+            <h3 style={{ fontSize: 16.5, fontWeight: 600, margin: '4px 0 0', color: '#000000' }}>{a.job.title}</h3>
+          </div>
+        </div>
+        <StatusBadge status={a.application.status} />
+      </div>
+
+      {/* Meta */}
+      <p style={{ fontSize: 13, color: MUTED, margin: 0 }}>
+        {`${a.job.companyName} · Applied ${timeAgo(a.application.createdAt)}`}
+      </p>
+
+      {/* Footer: via referrer + message/CV actions */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${BORDER}`, paddingTop: 14, flexWrap: 'wrap', gap: 10 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: GOLD }}>via {a.referrer?.fullName}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {a.application.status === 'submitted' && (
+            <>
+              <button
+                onClick={() => onReplaceClick(a.application.id)}
+                disabled={replacingId === a.application.id}
+                style={{ border: `1px solid ${BORDER}`, background: 'transparent', color: 'oklch(0.47 0.008 60)', fontSize: 13, fontWeight: 600, padding: '8px 14px', borderRadius: 9, cursor: 'pointer', opacity: replacingId === a.application.id ? 0.5 : 1 }}
+              >
+                {replacingId === a.application.id ? 'Replacing…' : 'Replace CV'}
+              </button>
+              <button
+                onClick={() => onWithdrawClick(a.application.id)}
+                style={{ border: `1px solid ${BORDER}`, background: 'transparent', color: 'oklch(0.55 0.15 30)', fontSize: 13, fontWeight: 600, padding: '8px 14px', borderRadius: 9, cursor: 'pointer' }}
+              >
+                Withdraw
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => onMessageOpen(a.application.id)}
+            style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${BORDER}`, background: 'transparent', color: 'oklch(0.47 0.008 60)', fontSize: 13, fontWeight: 600, padding: '8px 14px', borderRadius: 9, cursor: 'pointer' }}
+          >
+            <MessageCircle size={14} strokeWidth={1.8} /> Message
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute', top: -6, right: -6, minWidth: 16, height: 16, padding: '0 4px',
+                  background: GOLD, color: DARK, fontSize: 10, fontWeight: 700, borderRadius: 999,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+                }}
+              >
+                {unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {msgOpenId === a.application.id && (
+        <MessageThread
+          applicationId={a.application.id}
+          otherPartyName={a.referrer?.fullName ?? 'Referrer'}
+          open
+          onClose={onMessageClose}
+          onRead={() => {}}
+        />
+      )}
+    </div>
+  );
+}
+
 // ─── TAB: Requests you sent ───────────────────────────────────────────────────
 function SentTab({
   apps,
@@ -82,10 +182,6 @@ function SentTab({
   initialOpenMessageId?: string | null;
 }) {
   const [msgOpen, setMsgOpen] = useState<string | null>(initialOpenMessageId ?? null);
-  const { data: msgData } = useSWR(
-    msgOpen ? `messages-${msgOpen}` : null,
-    () => applicationsApi.getMessages(msgOpen!).then(r => r.data),
-  );
 
   const [replaceTargetId, setReplaceTargetId] = useState<string | null>(null);
   const [replacingId, setReplacingId] = useState<string | null>(null);
@@ -145,64 +241,16 @@ function SentTab({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {apps.map(a => (
-        <div key={a.application.id} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {/* Header: icon + company/title + status badge */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-              <BuildingIcon />
-              <div>
-                <span style={{ fontSize: 15, fontWeight: 700 }}>{a.job.companyName}</span>
-                <h3 style={{ fontSize: 16.5, fontWeight: 600, margin: '4px 0 0', color: '#000000' }}>{a.job.title}</h3>
-              </div>
-            </div>
-            <StatusBadge status={a.application.status} />
-          </div>
-
-          {/* Meta */}
-          <p style={{ fontSize: 13, color: MUTED, margin: 0 }}>
-            {`${a.job.companyName} · Applied ${timeAgo(a.application.createdAt)}`}
-          </p>
-
-          {/* Footer: via referrer + message/CV actions */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${BORDER}`, paddingTop: 14, flexWrap: 'wrap', gap: 10 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: GOLD }}>via {a.referrer?.fullName}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {a.application.status === 'submitted' && (
-                <>
-                  <button
-                    onClick={() => { setReplaceTargetId(a.application.id); replaceInputRef.current?.click(); }}
-                    disabled={replacingId === a.application.id}
-                    style={{ border: `1px solid ${BORDER}`, background: 'transparent', color: 'oklch(0.47 0.008 60)', fontSize: 13, fontWeight: 600, padding: '8px 14px', borderRadius: 9, cursor: 'pointer', opacity: replacingId === a.application.id ? 0.5 : 1 }}
-                  >
-                    {replacingId === a.application.id ? 'Replacing…' : 'Replace CV'}
-                  </button>
-                  <button
-                    onClick={() => setWithdrawTarget(a.application.id)}
-                    style={{ border: `1px solid ${BORDER}`, background: 'transparent', color: 'oklch(0.55 0.15 30)', fontSize: 13, fontWeight: 600, padding: '8px 14px', borderRadius: 9, cursor: 'pointer' }}
-                  >
-                    Withdraw
-                  </button>
-                </>
-              )}
-              <button
-                onClick={() => setMsgOpen(a.application.id)}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${BORDER}`, background: 'transparent', color: 'oklch(0.47 0.008 60)', fontSize: 13, fontWeight: 600, padding: '8px 14px', borderRadius: 9, cursor: 'pointer' }}
-              >
-                <MessageCircle size={14} strokeWidth={1.8} /> Message
-              </button>
-            </div>
-          </div>
-
-          {msgOpen === a.application.id && (
-            <MessageThread
-              applicationId={a.application.id}
-              otherPartyName={a.referrer?.fullName ?? 'Referrer'}
-              open
-              onClose={() => setMsgOpen(null)}
-              onRead={() => {}}
-            />
-          )}
-        </div>
+        <SentAppRow
+          key={a.application.id}
+          a={a}
+          replacingId={replacingId}
+          msgOpenId={msgOpen}
+          onReplaceClick={(id) => { setReplaceTargetId(id); replaceInputRef.current?.click(); }}
+          onWithdrawClick={setWithdrawTarget}
+          onMessageOpen={setMsgOpen}
+          onMessageClose={() => setMsgOpen(null)}
+        />
       ))}
 
       <input ref={replaceInputRef} type="file" accept=".pdf" className="hidden" onChange={handleReplaceInputChange} />
