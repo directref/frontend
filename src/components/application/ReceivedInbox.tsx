@@ -411,7 +411,7 @@ function DetailPanel({
           {application.status === 'internally_submitted'
             ? 'Submitted internally.'
             : application.status === 'expired'
-              ? 'Expired — no response in time.'
+              ? "This application expired because the referrer didn't respond within 5 days."
               : application.status === 'withdrawn'
                 ? 'Withdrawn by the seeker before you opened it.'
                 : 'Marked not a fit.'}
