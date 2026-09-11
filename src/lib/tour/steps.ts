@@ -42,7 +42,7 @@ export const tourSteps: TourStep[] = [
     anchor: 'credits',
     route: '/feed',
     title: 'Your credits',
-    body: 'View your available credit balance. Each job post costs 1 credit. You received 3 credits when you joined, plus 1 free credit every month.',
+    body: 'View your available credit balance. Each job post costs 1 credit. You received 5 credits when you joined, plus 1 free credit every month.',
   },
   {
     anchor: 'profile',

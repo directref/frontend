@@ -34,19 +34,16 @@ export default function SupportPage() {
           <Mail className="w-5 h-5 text-text-muted" strokeWidth={1.8} />
         </div>
         <h1 className="text-[20px] font-bold text-text-primary mb-2">Need more credits?</h1>
-        <p className="text-sm text-text-secondary mb-1">
-          Each job post costs 1 credit. You received 3 credits when you joined, plus 1 free credit every month.
-        </p>
         {balance && (
-          <p className="text-xs text-text-muted mb-5">
-            You currently have {balance.total} credit{balance.total === 1 ? '' : 's'}.
+          <p className="text-sm text-text-secondary mb-3">
+            You currently have {balance.total} credit{balance.total === 1 ? '' : 's'} remaining.
           </p>
         )}
         <p className="text-sm text-text-secondary mb-6">
-          If you need more than that, reach out to support and we&apos;ll take care of it.
+          DirectRef is currently in beta, so we&apos;re happy to top up your account for free! Just reach out to our team and let us know how many credits you need.
         </p>
         <a href={mailtoHref}>
-          <Button variant="primary" size="lg" className="w-full">Email support</Button>
+          <Button variant="primary" size="lg" className="w-full">Contact support</Button>
         </a>
       </div>
     </div>

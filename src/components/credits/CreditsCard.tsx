@@ -37,7 +37,7 @@ export function CreditsCard() {
               className="absolute left-0 bottom-6 z-50 w-48 text-[11px] leading-snug px-2.5 py-2 rounded-lg pointer-events-none"
               style={{ background: '#2A2118', color: '#E8DCC8', border: '1px solid rgba(212,175,122,0.15)' }}
             >
-              Each job post costs 1 credit. You received 3 credits when you joined, plus 1 free credit every month.
+              Each job post costs 1 credit. You received 5 credits when you joined, plus 1 free credit every month.
             </div>
           )}
         </div>
